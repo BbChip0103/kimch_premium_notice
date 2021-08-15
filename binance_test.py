@@ -72,10 +72,10 @@ def binance_callback_func():
 
 
 def get_usd_price():
+    url = 'https://quotation-api-cdn.dunamu.com/v1/forex/recent?codes=FRX.KRWUSD'
+    headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
     if os.name == 'nt':
         import requests
-        url = 'https://quotation-api-cdn.dunamu.com/v1/forex/recent?codes=FRX.KRWUSD'
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
         exchange =requests.get(url, headers=headers).json()
         return exchange[0]['basePrice']
     else:
@@ -85,9 +85,6 @@ def get_usd_price():
 
         buffer = BytesIO()
         c = pycurl.Curl()
-
-        url = 'https://quotation-api-cdn.dunamu.com/v1/forex/recent?codes=FRX.KRWUSD'
-        headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
 
         c.setopt(c.URL, url)
         c.setopt(c.WRITEDATA, buffer)
