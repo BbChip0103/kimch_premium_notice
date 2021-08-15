@@ -1,1 +1,1 @@
-# kimch_premium_notice
+# kimchi_premium_notice
