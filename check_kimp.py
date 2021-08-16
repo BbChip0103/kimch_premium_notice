@@ -6,10 +6,13 @@ import websockets
 import redis
 from binance import AsyncClient, DepthCacheManager, BinanceSocketManager
 import os
-import requests
-import pycurl
-from io import BytesIO
-import certifi
+
+if os.name == 'nt':
+    import requests
+else:
+    import pycurl
+    from io import BytesIO
+    import certifi
 
 
 async def upbit_ws_client(coin_list, redis_obj):
@@ -57,7 +60,7 @@ async def binance_ws_client(coin_list, redis_obj):
             res['price'] = float(res['price']) * usd_price
             coin_name = res['symbol']
             price = res['price']
-            print(coin_name, price)
+            # print(coin_name, price)
 
             redis_obj.set('BINANCE_'+coin_name, price)
         redis_obj.set('BINANCE_READY', 1)
@@ -129,6 +132,7 @@ def get_usd_price():
 
 def main_loop(overlapped_coin_list, redis_obj):
     while True:
+        print(int(redis_obj.get('UPBIT_READY')))
         if redis_obj.get('UPBIT_READY') == 1 and redis_obj.get('UPBIT_READY') == 1:
             for coin_name in overlapped_coin_list:
                 upbit_price = redis_obj.get('UPBIT_{}'.format(coin_name))
@@ -154,7 +158,10 @@ if __name__ == "__main__":
         ),
         asyncio.ensure_future(
             upbit_ws_client(overlapped_coin_list, redis_object)
-        )
+        ),
+        asyncio.ensure_future(
+            main_loop(overlapped_coin_list, redis_object)
+        )        
     ]
     event_loop = asyncio.get_event_loop()
     event_loop.run_until_complete(asyncio.wait(tasks))
