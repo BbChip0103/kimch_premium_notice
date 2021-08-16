@@ -38,10 +38,10 @@ async def upbit_ws_client(coin_list, redis_obj):
             res = json.loads(res)
             coin_name = res['cd'].replace('KRW-', '')
             price = res['tp']
-            # print(coin_name, price)
+#            print(coin_name, price)
 
             redis_obj.set('UPBIT_'+coin_name, price)
-            
+
             redis_obj.set('UPBIT_READY', 1)
 
 
@@ -132,7 +132,7 @@ def get_usd_price():
 
 def main_loop(overlapped_coin_list, redis_obj):
     while True:
-        print(int(redis_obj.get('UPBIT_READY')))
+        print(redis_obj.get('UPBIT_READY'), redis_obj.get('BINANCE_READY'))
         if redis_obj.get('UPBIT_READY') == 1 and redis_obj.get('UPBIT_READY') == 1:
             for coin_name in overlapped_coin_list:
                 upbit_price = redis_obj.get('UPBIT_{}'.format(coin_name))
@@ -145,24 +145,26 @@ def main_loop(overlapped_coin_list, redis_obj):
 
 if __name__ == "__main__":
     redis_object = redis.StrictRedis(host='localhost', port=6379, db=0)
+    redis_object.flushdb()
     redis_object.set('UPBIT_READY', 0)
     redis_object.set('BINANCE_READY', 0)
 
     upbit_coin_list = get_upbit_coin_list()
     binance_coin_list = get_binance_coin_list()
-    overlapped_coin_list = list(set(upbit_coin_list)&set(binance_coin_list)) 
+    overlapped_coin_list = list(set(upbit_coin_list)&set(binance_coin_list))
 
     tasks = [
-        asyncio.ensure_future(
-            binance_ws_client(overlapped_coin_list, redis_object),
-        ),
         asyncio.ensure_future(
             upbit_ws_client(overlapped_coin_list, redis_object)
         ),
         asyncio.ensure_future(
-            main_loop(overlapped_coin_list, redis_object)
-        )        
+            binance_ws_client(overlapped_coin_list, redis_object),
+        ),
+#        asyncio.ensure_future(
+#            main_loop(overlapped_coin_list, redis_object)
+#        )
     ]
     event_loop = asyncio.get_event_loop()
     event_loop.run_until_complete(asyncio.wait(tasks))
 
+    print('aaaa')
